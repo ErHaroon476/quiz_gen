@@ -8,7 +8,7 @@ export default function ResultsPage() {
   const [summary, setSummary] = useState('');
   const [quiz, setQuiz] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isQuizLoading, setIsQuizLoading] = useState(false); // Changed initial state to false
+  const [isQuizLoading, setIsQuizLoading] = useState(false);
   const [showGenerateQuiz, setShowGenerateQuiz] = useState(false);
 
   useEffect(() => {
@@ -26,6 +26,7 @@ export default function ResultsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ clientId }),
         });
+
         const metaData = await metaRes.json();
         if (!metaRes.ok) throw new Error(metaData.error);
 
@@ -42,7 +43,7 @@ export default function ResultsPage() {
 
         const summaryText = sumData.data?.summary || '';
         setSummary(summaryText);
-        setShowGenerateQuiz(true); // Show generate quiz button after summary is ready
+        setShowGenerateQuiz(true);
       } catch (err: any) {
         console.error('❌ Error:', err.message || err);
       } finally {
@@ -55,9 +56,9 @@ export default function ResultsPage() {
 
   const handleGenerateQuiz = async () => {
     if (!summary) return;
-    
+
     setIsQuizLoading(true);
-    setShowGenerateQuiz(false); // Hide the button while loading
+    setShowGenerateQuiz(false);
 
     try {
       const quizRes = await fetch('/api/quiz', {
@@ -69,20 +70,23 @@ export default function ResultsPage() {
       const quizData = await quizRes.json();
       if (!quizRes.ok) throw new Error(quizData.error);
 
-      let raw = typeof quizData.quiz === 'string' ? quizData.quiz : '';
-      let cleaned = raw.replace(/```(?:json)?/g, '').trim();
       let parsedQuiz: any[] = [];
 
-      try {
-        parsedQuiz = JSON.parse(cleaned);
-      } catch (e) {
-        console.error('❌ Failed to parse quiz JSON:', e, '\nRaw content:', raw);
+      if (typeof quizData.quiz === 'string') {
+        const raw = quizData.quiz.replace(/```(?:json)?/g, '').trim();
+        try {
+          parsedQuiz = JSON.parse(raw);
+        } catch (e) {
+          console.error('❌ Failed to parse quiz JSON:', e, '\nRaw content:', quizData.quiz);
+        }
+      } else if (Array.isArray(quizData.quiz)) {
+        parsedQuiz = quizData.quiz;
       }
 
       setQuiz(parsedQuiz);
     } catch (err: any) {
       console.error('❌ Quiz generation error:', err.message || err);
-      setShowGenerateQuiz(true); // Show button again if error occurs
+      setShowGenerateQuiz(true);
     } finally {
       setIsQuizLoading(false);
     }
@@ -96,16 +100,14 @@ export default function ResultsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
       <main className="container mx-auto px-6 py-12 relative">
-        {/* Back Button */}
         <button
           onClick={() => router.push('/')}
           className="absolute top-0 left-0 mt-6 ml-6 px-4 py-2 text-sm rounded-lg bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 hover:from-indigo-200 hover:to-purple-200 transition shadow-sm"
         >
           ← Back
         </button>
-        
+
         <div className="max-w-5xl mx-auto animate-fade-in">
-          {/* Header */}
           <div className="flex items-center justify-between mb-12">
             <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Analysis Results
@@ -124,7 +126,9 @@ export default function ResultsPage() {
               <div className="w-14 h-14 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mr-6 animate-pulse">
                 <i className="ri-file-text-line text-2xl text-indigo-600"></i>
               </div>
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">AI Summary</h3>
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                AI Summary
+              </h3>
             </div>
 
             {isLoading ? (
@@ -143,9 +147,14 @@ export default function ResultsPage() {
                 {showGenerateQuiz && (
                   <button
                     onClick={handleGenerateQuiz}
-                    className="mt-4 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition font-medium"
+                    disabled={isQuizLoading}
+                    className={`mt-4 px-6 py-3 rounded-xl transition font-medium ${
+                      isQuizLoading
+                        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700'
+                    }`}
                   >
-                    Generate Quiz
+                    {isQuizLoading ? 'Generating...' : 'Generate Quiz'}
                   </button>
                 )}
               </div>
@@ -162,7 +171,9 @@ export default function ResultsPage() {
               <div className="w-14 h-14 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full flex items-center justify-center mr-6 animate-pulse">
                 <i className="ri-question-line text-2xl text-purple-600"></i>
               </div>
-              <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Knowledge Quiz</h3>
+              <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Knowledge Quiz
+              </h3>
             </div>
 
             {isQuizLoading ? (
@@ -173,7 +184,7 @@ export default function ResultsPage() {
               <QuizComponent quiz={quiz} />
             ) : (
               <p className="text-center text-gray-500 py-12 text-lg">
-                {!showGenerateQuiz && !isQuizLoading ? "No quiz generated yet." : ""}
+                {!showGenerateQuiz && !isQuizLoading ? 'Press The Generate Quiz Button' : ''}
               </p>
             )}
           </div>
@@ -183,8 +194,6 @@ export default function ResultsPage() {
   );
 }
 
-// QuizComponent remains the same as in your original code
-// 👇 QuizComponent
 function QuizComponent({ quiz }: { quiz: any[] }) {
   const [answers, setAnswers] = useState<(string | null)[]>(Array(quiz.length).fill(null));
   const [submitted, setSubmitted] = useState(false);
