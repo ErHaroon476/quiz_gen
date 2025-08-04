@@ -100,13 +100,7 @@ export default function ResultsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
       <main className="container mx-auto px-6 py-12 relative">
-        <button
-          onClick={() => router.push('/')}
-          className="absolute top-0 left-0 mt-6 ml-6 px-4 py-2 text-sm rounded-lg bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 hover:from-indigo-200 hover:to-purple-200 transition shadow-sm"
-        >
-          ← Back
-        </button>
-
+     
         <div className="max-w-5xl mx-auto animate-fade-in">
           <div className="flex items-center justify-between mb-12">
             <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
@@ -116,7 +110,7 @@ export default function ResultsPage() {
               onClick={handleNewUpload}
               className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 cursor-pointer whitespace-nowrap transform hover:scale-105 shadow-lg font-medium"
             >
-              Upload New PDF
+              Go to HomePage
             </button>
           </div>
 
